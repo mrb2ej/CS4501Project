@@ -1,0 +1,25 @@
+=====================
+Compiling a .hs file:
+=====================
+ghc --make -o executable_name whatever.hs
+
+===========================
+Running that compiled file:
+===========================
+in Windows:
+executable_name.exe
+
+in Linux:
+./executable_name
+
+
+=====================
+Installing a package:
+=====================
+cabal install name_of_package
+
+
+=============================
+Needed Packages from Hackage:
+=============================
+parsec
