@@ -1,0 +1,312 @@
+"--------------------"
+"| Data Definitions |"
+"--------------------"
+
+"BST:"
+"(String, BST, BST) = (Value, Left_Subtree, Right_Subtree)"
+"interp. A binary search tree containing strings"
+
+"Board:"
+"[[String]] = [Rows]"
+"interp. A word search board"
+
+"Direction:"
+"(Int, Int, String) = (Row_Change, Col_Change, Name)"
+"interp. A direction that moves Row_Change rows and Col_Change columns"
+"Example: (0, 1, 'RIGHT') is the RIGHT direction. Going right means adding 1 to the current column,"
+"          but the current row does not change."
+
+"Solution:"
+"(String, Int, Int, String) = (Word, Row, Col, Direction)"
+"interp. Found the word at the given position in the given direction"
+
+
+"------------------------"
+"| Function Definitions |"
+"------------------------"
+
+"----------------------------------------------"
+"| bst_val                                    |"
+"| BST -> String                              |"
+"| Gets the value at the root node of the BST |"
+"----------------------------------------------"
+(define (bst_val bst) (car bst))
+
+"---------------------------------------"
+"| bst_left                            |"
+"| BST -> BST                          |"
+"| Returns the left subtree of the BST |"
+"---------------------------------------"
+(define (bst_left bst) (car (cdr bst)))
+
+"----------------------------------------"
+"| bst_right                            |"
+"| BST -> BST                           |"
+"| Returns the right subtree of the BST |"
+"----------------------------------------"
+(define (bst_right bst) (car (cdr (cdr bst))))
+
+"----------------------"
+"| bst_null?          |"
+"| BST -> Boolean     |"
+"| Test for empty BST |"
+"----------------------"
+(define (bst_null? bst) (string=? "" (bst_val bst)))
+
+"-------------------------------------------------------------"
+"| bst_contains?                                             |"
+"| BST -> String -> Boolean                                  |"
+"| Returns true if the string is in the BST, false otherwise |"
+"-------------------------------------------------------------"
+(define (bst_contains? bst elem) (if (bst_null? bst) #f (if (string=? elem (bst_val bst)) #t (if (string<=? elem (bst_val bst)) (bst_contains? (bst_left bst) elem) (bst_contains? (bst_right bst) elem)))))
+
+"----------------------------------"
+"| Constant defining an empty BST |"
+"----------------------------------"
+(define bst_empty '("" () ()))
+
+"---------------------------------------------------------"
+"| bst_insert                                            |"
+"| BST -> String -> BST                                  |"
+"| Produces new BST with the string added to the old BST |"
+"---------------------------------------------------------"
+(define (bst_insert bst elem) (if (bst_null? bst) (cons elem (cons bst_empty (cons bst_empty '()))) (if (string<=? elem (bst_val bst)) (cons (bst_val bst) (cons (bst_insert (bst_left bst) elem) (cons (bst_right bst) '()))) (cons (bst_val bst) (cons (bst_left bst) (cons (bst_insert (bst_right bst) elem) '()))))))
+
+"----------------------------------"
+"| list_length                    |"
+"| [String] -> Int                |"
+"| Returns the length of the list |"
+"----------------------------------"
+(define (list_length l) (if (eq? l '()) 0 (+ 1 (list_length (cdr l)))))
+
+"-------------------------------------------------------------"
+"| list_get                                                  |"
+"| [String] -> Int -> String                                 |"
+"| Returns the element of the list at the specified position |"
+"-------------------------------------------------------------"
+(define (list_get l index) (if (> index 0) (list_get (cdr l) (- index 1)) (car l)))
+
+"-------------------------------------------------------------------------------------------------------"
+"| sublist                                                                                             |"
+"| [String] -> Int -> Int -> [String]                                                                  |"
+"| Returns the sublist of the list from the start position (inclusive) to the end position (exclusive) |"
+"-------------------------------------------------------------------------------------------------------"
+(define (sublist l start end) (if (> start 0) (sublist (cdr l) (- start 1) (- end 1)) (if (> end 0) (cons (car l) (sublist (cdr l) start (- end 1))) '())))
+
+"--------------------------------------------------"
+"| bst_make_helper                                |"
+"| [String] -> BST -> BST                         |"
+"| Inserts each element of the list into the tree |"
+"--------------------------------------------------"
+(define (bst_make_helper list cur_tree) (if (eq? list '()) cur_tree (bst_make_helper (sublist list (+ (/ (list_length list) 2) 1) (list_length list)) (bst_make_helper (sublist list 0 (/ (list_length list) 2)) (bst_insert cur_tree (list_get list (/ (list_length list) 2)))))))
+
+"----------------------------------------------------"
+"| bst_make                                         |"
+"| [String] -> BST                                  |"
+"| Inserts each element of the list into a new tree |"
+"----------------------------------------------------"
+(define (bst_make list) (bst_make_helper list bst_empty))
+
+"-----------------------------------------------------------------"
+"| explode_helper                                                |"
+"| String -> String -> String -> [String]                        |"
+"| Returns a list representing the string split by the delimiter |"
+"-----------------------------------------------------------------"
+(define (explode_helper str del cur_elem) (if (string=? str "") (cons cur_elem '()) (if (string=? (string-char-at str 0) del) (cons cur_elem (explode_helper (string-substr str 1) del "")) (explode_helper (string-substr str 1) del (string-append cur_elem (string-char-at str 0))))))
+
+"-----------------------------------------------------------------"
+"| explode                                                       |"
+"| String -> String -> [String]                                  |"
+"| Returns a list representing the string split by the delimiter |"
+"-----------------------------------------------------------------"
+(define (explode str del) (explode_helper str del ""))
+
+"---------------------------------------------------------------"
+"| is_word?                                                    |"
+"| BST -> String -> Boolean                                    |"
+"| Produces true if the BST contains the word, false otherwise |"
+"---------------------------------------------------------------"
+(define (is_word? dict x) (bst_contains? dict x))
+
+"----------------------------------------------------------------------------"
+"| list_combine                                                             |"
+"| [String] -> [String] -> [String]                                         |"
+"| Produces a list representing the second list concatenated onto the first |"
+"----------------------------------------------------------------------------"
+(define (list_combine a b) (if (eq? a '()) b (cons (car a) (list_combine (cdr a) b))))
+
+"------------------------------------"
+"| word_board_row                   |"
+"| Board -> Int -> [String]         |"
+"| Returns the nth row of the board |"
+"------------------------------------"
+(define (word_board_row brd row) (if (= row 0) (car brd) (word_board_row (cdr brd) (- row 1))))
+
+"----------------------------------------------------------------------"
+"| word_board_val                                                     |"
+"| Board -> Int -> Int -> String                                      |"
+"| Returns the character on the board at the specified row and column |"
+"----------------------------------------------------------------------"
+(define (word_board_val brd row col) (list_get (word_board_row brd row) col))
+
+"----------------------------------"
+"| word_board_width               |"
+"| Board -> Int                   |"
+"| Returns the width of the board |"
+"----------------------------------"
+(define (word_board_width brd) (list_length (car brd)))
+
+"-----------------------------------"
+"| word_board_height               |"
+"| Board -> Int                    |"
+"| Returns the height of the board |"
+"-----------------------------------"
+(define (word_board_height brd) (list_length brd))
+
+"-----------------------------------------------------------------"
+"| word_row_change                                               |"
+"| Direction -> Int                                              |"
+"| Returns the number to be added to the row given the direction |"
+"-----------------------------------------------------------------"
+(define (word_row_change dir) (car dir))
+
+"--------------------------------------------------------------------"
+"| word_col_change                                                  |"
+"| Direction -> Int                                                 |"
+"| Returns the number to be added to the column given the direction |"
+"--------------------------------------------------------------------"
+(define (word_col_change dir) (car (cdr dir)))
+
+"-------------------------------------"
+"| word_dir_to_string                |"
+"| Direction -> String               |"
+"| Returns the name of the direction |"
+"-------------------------------------"
+(define (word_dir_to_string dir) (car (cdr (cdr dir))))
+
+"----------------------------------------------------------------"
+"| word_next_row                                                |"
+"| Int -> Direction -> Int                                      |"
+"| Returns the next row given the direction and the current row |"
+"----------------------------------------------------------------"
+(define (word_next_row row dir) (+ row (word_row_change dir)))
+
+"----------------------------------------------------------------------"
+"| word_next_col                                                      |"
+"| Int -> Direction -> Int                                            |"
+"| Returns the next column given the direction and the current column |"
+"----------------------------------------------------------------------"
+(define (word_next_col col dir) (+ col (word_col_change dir)))
+
+"-----------------------"
+"| Direction Constants |"
+"-----------------------"
+(define word_dir_right (cons 0 (cons 1 (cons "RIGHT" '()))))
+(define word_dir_left (cons 0 (cons (- 0 1) (cons "LEFT" '()))))
+(define word_dir_up (cons (- 0 1) (cons 0 (cons "UP" '()))))
+(define word_dir_down (cons 1 (cons 0 (cons "DOWN" '()))))
+(define word_dir_up_right (cons (- 0 1) (cons 1 (cons "UP-RIGHT" '()))))
+(define word_dir_down_right (cons 1 (cons 1 (cons "DOWN-RIGHT" '()))))
+(define word_dir_up_left (cons (- 0 1) (cons (- 0 1) (cons "UP-LEFT" '()))))
+(define word_dir_down_left (cons 1 (cons (- 0 1) (cons "DOWN-LEFT" '()))))
+
+"--------------------------------------------------"
+"| Constant list containing all of the directions |"
+"--------------------------------------------------"
+(define word_dir_all (cons word_dir_right (cons word_dir_left (cons word_dir_up (cons word_dir_down (cons word_dir_up_right (cons word_dir_down_right (cons word_dir_up_left (cons word_dir_down_left '())))))))))
+
+"----------------------------------------------------------------------------------------------"
+"| word_out_bounds?                                                                           |"
+"| Board -> Int -> Int -> Boolean                                                             |"
+"| Produces true if the row and column are not a valid position on the board, false otherwise |"
+"----------------------------------------------------------------------------------------------"
+(define (word_out_bounds? brd row col) (if (< row 0) #t (if (< col 0) #t (if (>= row (word_board_height brd)) #t (if (>= col (word_board_width brd)) #t #f)))))
+
+"-----------------------------------------------------------------------------------"
+"| word_find                                                                       |"
+"| Board -> BST -> Int -> Int -> Direction -> String -> Int -> Int -> [Solution]   |"
+"| Produces list of all solutions from the given position in the current direction |"
+"-----------------------------------------------------------------------------------"
+(define (word_find brd dict row col dir cur_word cur_row cur_col) (if (word_out_bounds? brd row col) '() (if (is_word? dict (string-append cur_word (word_board_val brd row col))) (cons (cons (string-append cur_word (word_board_val brd row col)) (cons cur_row (cons cur_col (cons (word_dir_to_string dir) '())))) (word_find brd dict (word_next_row row dir) (word_next_col col dir) dir (string-append cur_word (word_board_val brd row col)) cur_row cur_col)) (word_find brd dict (word_next_row row dir) (word_next_col col dir) dir (string-append cur_word (word_board_val brd row col)) cur_row cur_col))))
+
+"------------------------------------------------------------------------------------------"
+"| word_find_all_dirs_helper                                                              |"
+"| Board -> BST -> Int -> Int -> [Direction] -> [Solution]                                |"
+"| Produces list of all solutions from the given position in each of the given directions |"
+"------------------------------------------------------------------------------------------"
+(define (word_find_all_dirs_helper brd dict row col dirs) (if (eq? dirs '()) '() (list_combine (word_find brd dict row col (car dirs) "" row col) (word_find_all_dirs_helper brd dict row col (cdr dirs)))))
+
+"----------------------------------------------------------------------------"
+"| word_find_all_dirs                                                       |"
+"| Board -> BST -> Int -> Int -> [Solution]                                 |"
+"| Produces list of all solutions from the given position in each direction |"
+"----------------------------------------------------------------------------"
+(define (word_find_all_dirs brd dict row col) (word_find_all_dirs_helper brd dict row col word_dir_all))
+
+"----------------------------------------------------------------------"
+"| word_board_next_row                                                |"
+"| Board -> Int -> Int -> Int                                         |"
+"| Produces next row given the board, current row, and current column |"
+"|     Used for iterating through each position in a board            |"
+"----------------------------------------------------------------------"
+(define (word_board_next_row brd row col) (if (= col (- (word_board_width brd) 1)) (+ row 1) row))
+
+"-------------------------------------------------------------------------"
+"| word_board_next_col                                                   |"
+"| Board -> Int -> Int -> Int                                            |"
+"| Produces next column given the board, current row, and current column |"
+"|     Used for iterating through each position in a board               |"
+"-------------------------------------------------------------------------"
+(define (word_board_next_col brd row col) (if (= col (- (word_board_width brd) 1)) 0 (+ col 1)))
+
+"-------------------------------------------------------------------------------------"
+"| word_find_all_helper                                                              |"
+"| Board -> BST -> Int -> Int -> [Solution]                                          |"
+"| Produces list of all solutions in all directions starting from the given position |"
+"| and recursively adds the solutions from subsequent positions                      |"
+"-------------------------------------------------------------------------------------"
+(define (word_find_all_helper brd dict row col) (if (word_out_bounds? brd row col) '() (list_combine (word_find_all_dirs brd dict row col) (word_find_all_helper brd dict (word_board_next_row brd row col) (word_board_next_col brd row col)))))
+
+"-----------------------------------------------"
+"| word_find_all                               |"
+"| Board -> BST -> [Solution]                  |"
+"| Produces list of all solutions in the board |"
+"-----------------------------------------------"
+(define (word_find_all brd dict) (word_find_all_helper brd dict 0 0))
+
+"-----------------------------------------------------"
+"| explode_string_to_chars                           |"
+"| String -> [String]                                |"
+"| Produces list of all characters of a given string |"
+"-----------------------------------------------------"
+(define (explode_string_to_chars str) (if (string=? str "") '() (cons (string-char-at str 0) (explode_string_to_chars (string-substr str 1)))))
+
+"---------------------------------------------------------------"
+"| explode_string_list_to_chars                                |"
+"| [String] -> Board                                           |"
+"| Produces board given a list of string representing each row |"
+"---------------------------------------------------------------"
+(define (explode_string_list_to_chars l) (if (eq? l '()) '() (cons (explode_string_to_chars (car l)) (explode_string_list_to_chars (cdr l)))))
+
+"----------------------------"
+"| load_board               |"
+"| String -> Board          |"
+"| Produces board from file |"
+"----------------------------"
+(define (load_board board_filename) (explode_string_list_to_chars (explode (read-contents board_filename) ",")))
+
+"---------------------------------"
+"| load_dictionary               |"
+"| String -> BST                 |"
+"| Produces dictionary from file |"
+"---------------------------------"
+(define (load_dictionary dictionary_filename) (bst_make (explode (read-contents dictionary_filename) ",")))
+
+"--------------------------------------"
+"| word_solve                         |"
+"| String -> String -> [Solution]     |"
+"| Solves board with given dictionary |"
+"--------------------------------------"
+(define (word_solve board_filename dictionary_filename) (word_find_all (load_board board_filename) (load_dictionary dictionary_filename)))
+
+"Word Search Solver Loaded! Use (word_solve [board_filename] [dictionary_filename])"

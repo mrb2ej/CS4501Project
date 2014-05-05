@@ -4,7 +4,7 @@ import System.Environment
 import Control.Monad.Error
 import Data.IORef
 import Text.ParserCombinators.Parsec hiding (spaces)
-import System.IO hiding (try)
+import System.IO
 
 main :: IO ()
 main = do args <- getArgs
@@ -139,6 +139,7 @@ eval env badForm = throwError $ BadSpecialForm "Unrecognized special form" badFo
 
 apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
 apply (PrimitiveFunc func) args = liftThrows $ func args
+apply (IOFunc func) args = func args
 apply (Func params varargs body closure) args = 
     if num params /= num args && varargs == Nothing
        then throwError $ NumArgs (num params) args
@@ -171,6 +172,9 @@ primitives = [("+", numericBinop (+)),
               ("string?", strBoolBinop (>)),
               ("string<=?", strBoolBinop (<=)),
               ("string>=?", strBoolBinop (>=)),
+			  ("string-append", stringAppend),
+			  ("string-substr", stringSubstr),
+			  ("string-char-at", stringCharAt),
               ("car", car),
               ("cdr", cdr),
               ("cons", cons),
@@ -212,6 +216,35 @@ unpackStr notString = throwError $ TypeMismatch "string" notString
 unpackBool :: LispVal -> ThrowsError Bool
 unpackBool (Bool b) = return b
 unpackBool notBool = throwError $ TypeMismatch "boolean" notBool
+
+stringAppend :: [LispVal] -> ThrowsError LispVal
+stringAppend args = if length args /= 2
+                    then throwError $ NumArgs 2 args
+                    else do  left <- unpackStr $ args !! 0
+                             right <- unpackStr $ args !! 1
+                             return $ String $ (left ++ right)
+							 
+substr :: String -> Integer -> String
+substr s 0 = s
+substr (x:xs) n = (substr xs (n - 1))
+							 
+stringSubstr :: [LispVal] -> ThrowsError LispVal
+stringSubstr args = if length args /= 2
+                    then throwError $ NumArgs 2 args
+                    else do  left <- unpackStr $ args !! 0
+                             right <- unpackNum $ args !! 1
+                             return $ String $ (substr left right)
+							 
+charAt :: String -> Integer -> String
+charAt (x:xs) 0 = [x]
+charAt (x:xs) n = (charAt xs (n - 1))
+							
+stringCharAt :: [LispVal] -> ThrowsError LispVal
+stringCharAt args = if length args /= 2
+                    then throwError $ NumArgs 2 args
+                    else do  left <- unpackStr $ args !! 0
+                             right <- unpackNum $ args !! 1
+                             return $ String $ (charAt left right)
 
 car :: [LispVal] -> ThrowsError LispVal
 car [List (x : xs)] = return x
